@@ -29,15 +29,30 @@ def Question1():
                                offset=16).reshape(len(y_test), 784)
 
 
-    # show sample #100 from the train set
+    plt.figure(figsize=(20, 5))
+    g=sns.countplot(y_train) #checking out how many pictures there are for each class- 6000 per class
+    plt.title('Pictures per Label', fontsize=20)
+    plt.xlabel('Labels', fontsize=20)
+    for p in g.patches:
+        g.annotate("%.2f" % p.get_height(), (p.get_x() + p.get_width() / 2., p.get_height()),
+                    ha='center', va='center', fontsize=11, color='gray', xytext=(0, 20),
+                    textcoords='offset points')
+    _ = g.set_ylim(0, 7000)  # To make space for the annotations
+
+    plt.show()
+
+    #displaying the first 12 pictures from the Train Set
     class_names = ['T-shirt/top', 'Trouser', 'Pullover', 'Dress',
                    'Coat', 'Sandal', 'Shirt', 'Sneaker', 'Bag', 'Ankle boot']
-    i = 100
-    im = x_train[i].reshape([28, 28])
-    label = class_names[y_train[i]]
-    plt.figure()
-    plt.imshow(im, cmap='gray', interpolation='nearest')
-    plt.title(label)
+    fig = plt.figure(figsize=(10, 10))
+    for j in range(12):
+        j=j+1
+        im = x_train[j].reshape([28, 28])
+        label = class_names[y_train[j]]
+        plt1=fig.add_subplot(3,4,j)
+        plt.title(label)
+        plt.imshow(im, cmap='gray', interpolation='nearest')
+
     plt.show()
 
 
