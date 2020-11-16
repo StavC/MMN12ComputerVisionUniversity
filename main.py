@@ -3,6 +3,10 @@ import cv2
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy import stats
+import sklearn as sk
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.decomposition import PCA
+
 import gzip
 
 
@@ -54,6 +58,104 @@ def Question1():
         plt.imshow(im, cmap='gray', interpolation='nearest')
 
     plt.show()
+
+
+
+
+    myPCA(x_train,y_train,x_test,y_test)
+    #myKNN(x_train,y_train,x_test,y_test)
+
+
+def myPCA(x_train,y_train,x_test,y_test):
+    pca = PCA( random_state=20)
+    pca.fit(x_train)
+    #print(pca.singular_values_)
+    #print(pca.n_components)
+    #print(pca.explained_variance_ratio_)
+    #print(pca.components_[1].shape)
+
+    fig = plt.figure(figsize=(10, 10))
+    pic = np.zeros([28, 28])
+    for j in range(6):
+        p = pca.components_[j].reshape(28, 28)
+        plt1 = fig.add_subplot(3, 2, j + 1)
+        pic = pic + p
+        plt.imshow(p, cmap='gray', interpolation='nearest')
+    plt.show()
+
+    plt.imshow(pic, cmap='gray') # wanted to see the combined pic (not related to the must do work)
+    plt.show()
+
+    plt.imshow(pca.mean_.reshape([28,28]),cmap='gray') # the mean of
+    plt.show()
+
+
+    sns.set()
+
+    plt.plot(np.cumsum(pca.explained_variance_ratio_))
+    plt.xlabel('number of components')
+    plt.ylabel('cumulative explained variance')
+    plt.show()
+
+    pca=PCA(n_components=2)
+    projected = pca.fit_transform(x_train)
+    print(x_train.shape)
+    print(projected.shape)
+
+    plt.scatter(projected[:, 0], projected[:, 1],
+                c=y_train, edgecolor='none', alpha=0.5,
+                cmap=plt.cm.get_cmap('gist_rainbow', 10))
+    plt.xlabel('component 1')
+    plt.ylabel('component 2')
+    plt.colorbar()
+    plt.show()
+
+    #starting F
+
+    compoList=[2,10,20]
+
+    for comp in compoList:
+        pcaForKNN=PCA(n_components=comp)
+        pcaForKNN.fit(x_train,y_train)
+        x_train_ready=pcaForKNN.transform(x_train)
+        x_test_ready=pcaForKNN.transform(x_test)
+
+        KNNScore=KNNHelper(x_train_ready,y_train,x_test_ready,y_test)
+        plt.figure()
+        plt.title(f'componenets {comp}')
+        plt.plot(range(1,11),KNNScore,marker='x')
+    plt.show()
+
+def KNNHelper(x_train,y_train,x_test,y_test):
+    scores=[]
+    for k in range(1,11):
+        KNN = KNeighborsClassifier(n_neighbors=k, n_jobs=-1)
+        KNN.fit(x_train, y_train)
+        print(f"finished fiting :{k} ")
+        scores.append(KNN.score(x_test, y_test))
+        print('finished predicting')
+    return scores
+
+
+
+def myKNN(x_train,y_train,x_test,y_test):
+    scores = []
+    from sklearn.utils import shuffle
+    # x, y = shuffle(x_train, y_train, random_state=2)
+    x = x_train
+    y = y_train
+    for k in range(1, 11):
+        KNN = KNeighborsClassifier(n_neighbors=k,n_jobs=-1)
+        KNN.fit(x, y)
+        print(f"finished fiting :{k} ")
+        scores.append(KNN.score(x_test, y_test))
+        print('finished predicting')
+
+    plt.plot(scores, label='score')
+    plt.xticks(np.arange(len(scores)), np.arange(1, len(scores) + 1))
+    plt.legend()
+    plt.show()
+
 
 
 if __name__ == '__main__':
