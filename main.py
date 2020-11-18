@@ -100,7 +100,7 @@ def Question2(x_train,y_train,x_test,y_test):
     plt.colorbar()
     plt.show()
 
-    # starting F
+    # starting 2.F
 
     compoList = [2, 10, 20]
 
@@ -116,6 +116,7 @@ def Question2(x_train,y_train,x_test,y_test):
         plt.plot(range(1, 11), KNNScore, marker='x')
 
     plt.show()
+    #Finished 2.F
 
     sns.reset_orig()
     # Starting G
@@ -137,6 +138,66 @@ def Question2(x_train,y_train,x_test,y_test):
     # Finished G
 
 
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+
+def Question3(x_train,y_train,x_test,y_test):
+    #Staring 3.C+D
+    clf=LinearDiscriminantAnalysis()
+    clf.fit(x_train,y_train)
+    sns.set()
+    plt.plot(np.cumsum(clf.explained_variance_ratio_))
+    # checking out how many componenets are required to get to 80% and 95% exactly on point!
+    sum = 0
+    i = 0
+    check80 = True
+    while True:
+        sum = sum + clf.explained_variance_ratio_[i]
+        if sum >= 0.80 and check80 == True:
+            print(f'after {i} components we got to 80% ')
+            check80 = False
+        if sum >= 0.95:
+            print(f'after {i} components we got to 95% ')
+            break
+        i = i + 1
+    plt.xlabel('number of components')
+    plt.ylabel('cumulative explained variance')
+    plt.show()
+    #Finished 3.C+D
+
+    #Starting 3.E
+
+    clf = LinearDiscriminantAnalysis(n_components=2)
+    projected = clf.fit_transform(x_train,y_train)
+    print(x_train.shape)
+    print(projected.shape)
+
+    plt.scatter(projected[:, 0], projected[:, 1],
+                c=y_train, edgecolor='none', alpha=0.5,
+                cmap=plt.cm.get_cmap('gist_rainbow', 10))
+    plt.xlabel('component 1')
+    plt.ylabel('component 2')
+    plt.colorbar()
+    plt.show()
+
+    #Finished 3.E
+
+    # starting 3.F
+
+    compoList = [2, 5, 8] #should be 2,10,20 but the maximum is 8
+
+    for comp in compoList:
+        ldaForKNN = LinearDiscriminantAnalysis(n_components=comp)
+        ldaForKNN.fit(x_train,y_train)
+        x_train_ready = ldaForKNN.transform(x_train)
+        x_test_ready = ldaForKNN.transform(x_test)
+
+        KNNScore = KNNHelper(x_train_ready, y_train, x_test_ready, y_test)
+        plt.figure()
+        plt.title(f'componenets {comp}')
+        plt.plot(range(1, 11), KNNScore, marker='x')
+
+    plt.show()
+    # Finished 3.F
 
 
 
@@ -144,8 +205,7 @@ def Question2(x_train,y_train,x_test,y_test):
 
 
 
-
-if __name__ == '__main__':
+def main():
     # Opening the DataSet
     y_train_path = 'train-labels-idx1-ubyte.gz'
     x_train_path = 'train-images-idx3-ubyte.gz'
@@ -194,5 +254,8 @@ if __name__ == '__main__':
     plt.show()
     # just comment and uncomment which Question that you want to check :)
     #Question1(x_train,y_train,x_test,y_test)
-    Question2(x_train,y_train,x_test,y_test)
-    #Question3()
+    #Question2(x_train,y_train,x_test,y_test)
+    #Question3(x_train,y_train,x_test,y_test)
+
+if __name__ == '__main__':
+    main()
