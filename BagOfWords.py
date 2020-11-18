@@ -1,9 +1,11 @@
 import os
-import cv2
+#import cv2 as cv
+import cv2 as cv
 import numpy as np
-import matplotlib.pyplot as plt
-
-
+#import matplotlib.pyplot as plt
+import pysift
+from sklearn.cluster import KMeans
+from sklearn.cluster import MiniBatchKMeans
 def main2():
 
     path = 'spatial_envelope_256x256_static_8outdoorcategories'
@@ -84,9 +86,36 @@ def main2():
 
         print(f'train_x and train_y sizes are:  {len(train_x)},{len(train_y)}') #making sure the math done right and we got 260*8*0.8=1664 pictures in the training set
         print(f'test_x and test_y sizes are:  {len(test_x)},{len(test_y)}') #making sure the math done right and we got 260*8*0.2=416 pictures in the testing set
+    #now the Dataset is ready, we lost some data along the way but each class have equal amouns of pictures in training,testing set
+
+    #Starting Question 1
+    POI=[]
+    #dense = cv.FastFeatureDetector_create()
+    mbk=MiniBatchKMeans(150)
+    kmeans=KMeans(150)
+    i=0
+
+    sift = cv.xfeatures2d.SIFT_create()
+
+    for train_x_img in train_x:
+        print(train_x_img)
+        img=cv.imread(train_x_img)
+        imgGray=cv.cvtColor(img,cv.COLOR_BGR2GRAY)
+        kp, des = sift.detectAndCompute(imgGray,None)
+        POI.append(des)
+        mbk.partial_fit(des)
 
 
+    print(mbk.cluster_centers_)
+    hist=[]
+    for des in POI:
+        im_mean=mbk.predict(des)
+        his,bins=np.histogram(im_mean,bins=149)
+        hist.append(his)
 
+
+    print(POI)
+    print(len(POI))
 
 
 
