@@ -259,7 +259,7 @@ def BOWDeepLearning():
         des=model.predict(im)
         #des=des.reshape([-1,1])
         print(des.shape)
-        des=des.reshape([512,64])
+        des=des.reshape([1024,32])
         print(des.shape)
         POI.append(des)
         mbk.partial_fit(des)
@@ -272,6 +272,7 @@ def BOWDeepLearning():
         hist.append(his)
 
     # SVM
+
 
     for c in c_array:  # trying out diffrent values for C
 
@@ -286,14 +287,14 @@ def BOWDeepLearning():
             im = preprocess_input(im)
             des=model.predict(im)
             #des = des.reshape([-1, 1])
-            des = des.reshape([512,64])
+            des = des.reshape([1024,32])
             POI_test.append(des)
             mbk.partial_fit(des)
 
         hist_test = []
         for des in POI_test:
             pred = mbk.predict(des)
-            his, _ = np.histogram(pred, bins=200)
+            his, _ = np.histogram(pred, bins=200)#200 normally
             hist_test.append(his)
 
         predictions = linear_svm.predict(hist_test)
@@ -308,3 +309,17 @@ if __name__ == '__main__':
 
 #(512, 64)
 #0.71
+
+#1024,32  200 normally bins and such MBK
+#0.73
+
+#2048,16
+#0.46
+
+#1024,32  100 normally bins and such MBK
+#0.74
+
+
+
+#1024,32  300 normally bins and such MBK
+#
