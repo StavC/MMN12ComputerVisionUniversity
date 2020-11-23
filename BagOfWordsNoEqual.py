@@ -10,9 +10,6 @@ from sklearn import svm
 from sklearn import metrics
 from itertools import cycle
 import tensorflow as tf
-from sklearn.calibration import CalibratedClassifierCV
-
-
 
 
 def BOWSift(train_x,train_y,test_x,test_y):
@@ -23,7 +20,7 @@ def BOWSift(train_x,train_y,test_x,test_y):
     k=100 #feel free to change this hyperparmeter to test different sizes
     mbk=MiniBatchKMeans(k)
     bins=100 #feel free to change this hyperparmeter to test different sizes
-    c_array=[1,10,50,200,1000]
+    c_array=[1,10,50,200]
 
     sift = cv.xfeatures2d.SIFT_create()
 
@@ -45,10 +42,8 @@ def BOWSift(train_x,train_y,test_x,test_y):
     #SVM
 
     for c in c_array: #trying out diffrent values for C
-        linear_svm=svm.SVC(C=c,max_iter=5000,random_state=20,probability=True,kernel='linear') #Model that supports ROC Plot
-        #linear_svm=svm.LinearSVC(C=c,max_iter=5000,dual=False,random_state=20) #Model without ROC Plot
 
-
+        linear_svm=svm.LinearSVC(C=c,max_iter=5000,dual=False,random_state=20)
         linear_svm.fit(hist,train_y)
 
        #starting the testing phase
@@ -58,6 +53,7 @@ def BOWSift(train_x,train_y,test_x,test_y):
             imgGray=cv.cvtColor(img,cv.COLOR_BGR2GRAY)
             _,des=sift.detectAndCompute(imgGray,None)
             POI_test.append(des)
+            mbk.partial_fit(des)
 
         hist_test=[]
         for des in POI_test:
@@ -66,35 +62,21 @@ def BOWSift(train_x,train_y,test_x,test_y):
             hist_test.append(his)
 
         predictions=linear_svm.predict(hist_test)
-        predictionsProb=linear_svm.predict_proba(hist_test)
-
-        import scikitplot as skplt
-        skplt.metrics.plot_roc(test_y, predictionsProb)
-        plt.show()
+        y_score=linear_svm.decision_function(hist_test)
 
         print(f" Class report for classifier {linear_svm},\n{metrics.classification_report(test_y,predictions)}")
-        report=metrics.classification_report(test_y, predictions,output_dict=True)
-        conf = metrics.confusion_matrix(test_y, predictions)
-        print(conf)
-        import seaborn as sn
-        import pandas as pd
-
-        df_cm = pd.DataFrame(conf, ['coast', 'forest', 'highway', 'insidecity', 'mountain', 'opencountry', 'street',
-                                    'tallbuilding'],
-                             ['coast', 'forest', 'highway', 'insidecity', 'mountain', 'opencountry', 'street',
-                              'tallbuilding'])
-        # plt.figure(figsize=(10,7))
-        sn.heatmap(df_cm, annot=True, annot_kws={"size": 16})  # font size
-
+        '''
+        fpr,tpr,_=metrics.roc_curve(test_y,y_score=y_score)
+        auc=metrics.auc(fpr,tpr)
+        plt.figure()
+        plt.plot(fpr,tpr,label=f'auc :{auc}')
         plt.show()
-
-
+        '''
 
 from tensorflow.keras.applications.vgg16 import preprocess_input
 from tensorflow.keras.applications.vgg16 import VGG16
 from tensorflow.keras.layers import Input
 def BOWDeepLearning(train_x,train_y,test_x,test_y):
-
 
     input_tensor = Input(shape=(None, None, 3))
     model = VGG16(input_tensor=input_tensor, weights='imagenet', include_top=False)
@@ -105,13 +87,12 @@ def BOWDeepLearning(train_x,train_y,test_x,test_y):
     im = preprocess_input(im)
     pred = model.predict(im)
 
-
     # Starting Question 1
     POI = []
+    bins=100 #feel free to change this hyperparmeter to test different sizes
     k=100 #feel free to change this hyperparmeter to test different sizes
     mbk = MiniBatchKMeans(k)
     c_array = [1, 10, 50]
-    bins=100 #feel free to change this hyperparmeter to test different sizes
 
 
     for train_x_img in train_x:
@@ -119,9 +100,10 @@ def BOWDeepLearning(train_x,train_y,test_x,test_y):
         im = np.expand_dims(im, axis=0)
         im = preprocess_input(im)
         des=model.predict(im)
-        print(des.shape)
         #des=des.reshape([-1,1])
-        des=des.reshape([1024,32]) # #feel free to change this hyperparmeter to test different shapes
+        print(des.shape)
+        des=des.reshape([1024,32])
+        print(des.shape)
         POI.append(des)
         mbk.partial_fit(des)
 
@@ -137,9 +119,7 @@ def BOWDeepLearning(train_x,train_y,test_x,test_y):
 
     for c in c_array:  # trying out diffrent values for C
 
-        linear_svm=svm.SVC(C=c,max_iter=5000,random_state=20,probability=True,kernel='linear') #Model that supports ROC
-        #linear_svm = svm.LinearSVC(C=c, max_iter=5000, dual=False, random_state=20)# Model that not support ROC
-
+        linear_svm = svm.LinearSVC(C=c, max_iter=5000, dual=False, random_state=20)
         linear_svm.fit(hist, train_y)
 
         # starting the testing phase
@@ -149,27 +129,21 @@ def BOWDeepLearning(train_x,train_y,test_x,test_y):
             im = np.expand_dims(im, axis=0)
             im = preprocess_input(im)
             des=model.predict(im)
-            des = des.reshape([1024,32]) # #feel free to change this hyperparmeter to test different shapes
+            #des = des.reshape([-1, 1])
+            des = des.reshape([1024,32])
             POI_test.append(des)
+            #mbk.partial_fit(des)
 
         hist_test = []
         for des in POI_test:
             pred = mbk.predict(des)
-            his, _ = np.histogram(pred, bins=bins)
+            his, _ = np.histogram(pred, bins=bins)#200 normally
             hist_test.append(his)
 
         predictions = linear_svm.predict(hist_test)
-        predictionsProb = linear_svm.predict_proba(hist_test)
-
-        import scikitplot as skplt
-        skplt.metrics.plot_roc(test_y, predictionsProb)
-        plt.show()
+        y_score = linear_svm.decision_function(hist_test)
 
         print(f" Class report for classifier {linear_svm},\n{metrics.classification_report(test_y, predictions)}")
-        report = metrics.classification_report(test_y, predictions, output_dict=True)
-        conf = metrics.confusion_matrix(test_y, predictions)
-        print(conf)
-
 
 
 if __name__ == '__main__':
@@ -208,54 +182,85 @@ if __name__ == '__main__':
     test_x=[]
     test_y=[]
     minPictures=(min(len(coast),len(forest),len(highway),len(insidecity),len(mountain),len(opencountry),len(street),len(tallbuilding)))
+    print(f'coast: {len(coast)}, forest: {len(forest)}, highway:  {len(highway)}, insidecity: {len(insidecity)}, mountain: {len(mountain)}, opencountry: {len(opencountry)}, street: {len(street)}, tallbuilding {len(tallbuilding)} ')
+    #print(f'the least amount of pictures from all of the categories is : {minPictures}')
+    ratios=0.8 # the ratio of Database split to Train/test Set
 
-    print(f'the least amount of pictures from all of the categories is : {minPictures}')
-    ratios=0.8
-    ratio=int(minPictures*ratios)  # im balancing the dataset so each class will have equal amount of pictures to avoid overfit!
+    ratio=int(minPictures*ratios) # im balancing the dataset so each class will have equal amount of pictures to avoid overfit!
     #for i in range (ratio):
-    for i in range (minPictures):
-        if i< ratio:
+
+    for i in range (len(coast)):
+            if i<int(len(coast)*ratios):
                 train_x.append(coast[i])
                 train_y.append('coast')
-                train_x.append(forest[i])
-                train_y.append('forest')
-                train_x.append(highway[i])
-                train_y.append('highway')
-                train_x.append(insidecity[i])
-                train_y.append('insidecity')
-                train_x.append(mountain[i])
-                train_y.append('mountain')
-                train_x.append(opencountry[i])
-                train_y.append('opencountry')
-                train_x.append(street[i])
-                train_y.append('street')
-                train_x.append(tallbuilding[i])
-                train_y.append('tallbuilding')
-        else:
+            else:
                 test_x.append(coast[i])
                 test_y.append('coast')
+
+    for i in  range (len(forest)):
+            if i<(len(forest)*ratios):
+                train_x.append(forest[i])
+                train_y.append('forest')
+            else:
                 test_x.append(forest[i])
                 test_y.append('forest')
+
+    for i in range (len(highway)):
+            if i < (len(highway)*ratios):
+                train_x.append(highway[i])
+                train_y.append('highway')
+            else:
                 test_x.append(highway[i])
                 test_y.append('highway')
+
+    for i in range (len(insidecity)):
+            if i < (len(insidecity)*ratios):
+                train_x.append(insidecity[i])
+                train_y.append('insidecity')
+            else:
                 test_x.append(insidecity[i])
                 test_y.append('insidecity')
+
+    for i in range(len(mountain)):
+            if i < (len(mountain)*ratios):
+                train_x.append(mountain[i])
+                train_y.append('mountain')
+            else:
                 test_x.append(mountain[i])
                 test_y.append('mountain')
+
+    for i in range(len(opencountry)):
+            if i < (len(opencountry)*ratios):
+                train_x.append(opencountry[i])
+                train_y.append('opencountry')
+            else:
                 test_x.append(opencountry[i])
                 test_y.append('opencountry')
+
+    for i in range(len(street)):
+            if i < (len(street)*ratios):
+                train_x.append(street[i])
+                train_y.append('street')
+            else:
                 test_x.append(street[i])
                 test_y.append('street')
+
+    for i in range(len(tallbuilding)):
+            if i < (len(tallbuilding)*ratios):
+                train_x.append(tallbuilding[i])
+                train_y.append('tallbuilding')
+            else:
                 test_x.append(tallbuilding[i])
                 test_y.append('tallbuilding')
+
+
 
 
     print(f'train_x and train_y sizes are:  {len(train_x)},{len(train_y)}') #making sure the math done right and we got 260*8*0.8=1664 pictures in the training set
     print(f'test_x and test_y sizes are:  {len(test_x)},{len(test_y)}') #making sure the math done right and we got 260*8*0.2=416 pictures in the testing set
     #now the Dataset is ready, we lost some data along the way but each class have equal amounts of pictures in training,testing set
-    BOWSift(train_x,train_y,test_x,test_y)
-    #0.60% with 100 bins and mbk C=10
-    #BOWDeepLearning(train_x,train_y,test_x,test_y)
+    #BOWSift(train_x,train_y,test_x,test_y)
+    BOWDeepLearning(train_x,train_y,test_x,test_y)
 
 #(512, 64)
 #0.71
@@ -267,7 +272,7 @@ if __name__ == '__main__':
 #0.46
 
 #1024,32  100 normally bins and such MBK
-#0.75
+#0.74
 
 
 
