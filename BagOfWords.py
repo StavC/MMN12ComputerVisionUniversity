@@ -1,16 +1,12 @@
 import os
-#import cv2 as cv
 import cv2 as cv
 import numpy as np
 import matplotlib.pyplot as plt
-import pysift
-from sklearn.cluster import KMeans
 from sklearn.cluster import MiniBatchKMeans
 from sklearn import svm
 from sklearn import metrics
-from itertools import cycle
-import tensorflow as tf
-from sklearn.calibration import CalibratedClassifierCV
+import seaborn as sn
+import pandas as pd
 
 
 
@@ -76,16 +72,15 @@ def BOWSift(train_x,train_y,test_x,test_y):
         report=metrics.classification_report(test_y, predictions,output_dict=True)
         conf = metrics.confusion_matrix(test_y, predictions)
         print(conf)
-        import seaborn as sn
-        import pandas as pd
+
 
         df_cm = pd.DataFrame(conf, ['coast', 'forest', 'highway', 'insidecity', 'mountain', 'opencountry', 'street',
                                     'tallbuilding'],
                              ['coast', 'forest', 'highway', 'insidecity', 'mountain', 'opencountry', 'street',
                               'tallbuilding'])
-        # plt.figure(figsize=(10,7))
         sn.heatmap(df_cm, annot=True, annot_kws={"size": 16})  # font size
-
+        plt.ylabel('True label')
+        plt.xlabel('Predicted label')
         plt.show()
 
 
@@ -119,8 +114,6 @@ def BOWDeepLearning(train_x,train_y,test_x,test_y):
         im = np.expand_dims(im, axis=0)
         im = preprocess_input(im)
         des=model.predict(im)
-        print(des.shape)
-        #des=des.reshape([-1,1])
         des=des.reshape([1024,32]) # #feel free to change this hyperparmeter to test different shapes
         POI.append(des)
         mbk.partial_fit(des)
@@ -170,6 +163,14 @@ def BOWDeepLearning(train_x,train_y,test_x,test_y):
         conf = metrics.confusion_matrix(test_y, predictions)
         print(conf)
 
+        df_cm = pd.DataFrame(conf, ['coast', 'forest', 'highway', 'insidecity', 'mountain', 'opencountry', 'street',
+                                    'tallbuilding'],
+                             ['coast', 'forest', 'highway', 'insidecity', 'mountain', 'opencountry', 'street',
+                              'tallbuilding'])
+        sn.heatmap(df_cm, annot=True, annot_kws={"size": 16})  # font size
+        plt.ylabel('True label')
+        plt.xlabel('Predicted label')
+        plt.show()
 
 
 if __name__ == '__main__':
@@ -255,21 +256,6 @@ if __name__ == '__main__':
     #now the Dataset is ready, we lost some data along the way but each class have equal amounts of pictures in training,testing set
     BOWSift(train_x,train_y,test_x,test_y)
     #0.60% with 100 bins and mbk C=10
-    #BOWDeepLearning(train_x,train_y,test_x,test_y)
-
-#(512, 64)
-#0.71
-
-#1024,32  200 normally bins and such MBK
-#0.73
-
-#2048,16
-#0.46
-
-#1024,32  100 normally bins and such MBK
-#0.75
+    BOWDeepLearning(train_x,train_y,test_x,test_y)
 
 
-
-#1024,32  300 normally bins and such MBK
-#
