@@ -246,7 +246,7 @@ if __name__ == '__main__':
     #now the Dataset is ready, we lost some data along the way but each class have equal amounts of pictures in training,testing set
     BOWSift(train_x,train_y,test_x,test_y)
     #0.60% with 100 bins and mbk C=10
-    BOWDeepLearning(train_x,train_y,test_x,test_y)
+    #BOWDeepLearning(train_x,train_y,test_x,test_y)
 
 #(512, 64)
 #0.71
