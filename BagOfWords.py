@@ -77,8 +77,13 @@ def BOWSift(train_x,train_y,test_x,test_y):
         conf = metrics.confusion_matrix(test_y, predictions)
         print(conf)
 
-
-
+        from sklearn.metrics import plot_confusion_matrix
+        disp = plot_confusion_matrix(linear_svm, test_x, test_y,
+                                     display_labels=['coast','forest','highway','insidecity','mountain','opencountry','street','tallbuilding'],
+                                     cmap=plt.cm.Blues,
+                                     )
+        disp.ax_.set_title('title')
+        plt.show()
 
 
 from tensorflow.keras.applications.vgg16 import preprocess_input
