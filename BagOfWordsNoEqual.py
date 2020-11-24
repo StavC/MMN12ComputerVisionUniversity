@@ -1,15 +1,10 @@
 import os
-#import cv2 as cv
 import cv2 as cv
 import numpy as np
 import matplotlib.pyplot as plt
-import pysift
-from sklearn.cluster import KMeans
 from sklearn.cluster import MiniBatchKMeans
 from sklearn import svm
 from sklearn import metrics
-from itertools import cycle
-import tensorflow as tf
 
 
 def BOWSift(train_x,train_y,test_x,test_y):
@@ -53,7 +48,6 @@ def BOWSift(train_x,train_y,test_x,test_y):
             imgGray=cv.cvtColor(img,cv.COLOR_BGR2GRAY)
             _,des=sift.detectAndCompute(imgGray,None)
             POI_test.append(des)
-            mbk.partial_fit(des)
 
         hist_test=[]
         for des in POI_test:
@@ -62,16 +56,9 @@ def BOWSift(train_x,train_y,test_x,test_y):
             hist_test.append(his)
 
         predictions=linear_svm.predict(hist_test)
-        y_score=linear_svm.decision_function(hist_test)
 
         print(f" Class report for classifier {linear_svm},\n{metrics.classification_report(test_y,predictions)}")
-        '''
-        fpr,tpr,_=metrics.roc_curve(test_y,y_score=y_score)
-        auc=metrics.auc(fpr,tpr)
-        plt.figure()
-        plt.plot(fpr,tpr,label=f'auc :{auc}')
-        plt.show()
-        '''
+
 
 from tensorflow.keras.applications.vgg16 import preprocess_input
 from tensorflow.keras.applications.vgg16 import VGG16
@@ -100,10 +87,9 @@ def BOWDeepLearning(train_x,train_y,test_x,test_y):
         im = np.expand_dims(im, axis=0)
         im = preprocess_input(im)
         des=model.predict(im)
-        #des=des.reshape([-1,1])
-        print(des.shape)
+        #print(des.shape)
         des=des.reshape([1024,32])
-        print(des.shape)
+        #print(des.shape)
         POI.append(des)
         mbk.partial_fit(des)
 
@@ -129,10 +115,8 @@ def BOWDeepLearning(train_x,train_y,test_x,test_y):
             im = np.expand_dims(im, axis=0)
             im = preprocess_input(im)
             des=model.predict(im)
-            #des = des.reshape([-1, 1])
             des = des.reshape([1024,32])
             POI_test.append(des)
-            #mbk.partial_fit(des)
 
         hist_test = []
         for des in POI_test:
@@ -141,7 +125,6 @@ def BOWDeepLearning(train_x,train_y,test_x,test_y):
             hist_test.append(his)
 
         predictions = linear_svm.predict(hist_test)
-        y_score = linear_svm.decision_function(hist_test)
 
         print(f" Class report for classifier {linear_svm},\n{metrics.classification_report(test_y, predictions)}")
 
@@ -186,8 +169,7 @@ if __name__ == '__main__':
     #print(f'the least amount of pictures from all of the categories is : {minPictures}')
     ratios=0.8 # the ratio of Database split to Train/test Set
 
-    ratio=int(minPictures*ratios) # im balancing the dataset so each class will have equal amount of pictures to avoid overfit!
-    #for i in range (ratio):
+    ratio=int(minPictures*ratios) # the ratios isnt balanced here!
 
     for i in range (len(coast)):
             if i<int(len(coast)*ratios):
@@ -260,21 +242,4 @@ if __name__ == '__main__':
     print(f'test_x and test_y sizes are:  {len(test_x)},{len(test_y)}') #making sure the math done right and we got 260*8*0.2=416 pictures in the testing set
     #now the Dataset is ready, we lost some data along the way but each class have equal amounts of pictures in training,testing set
     #BOWSift(train_x,train_y,test_x,test_y)
-    BOWDeepLearning(train_x,train_y,test_x,test_y)
-
-#(512, 64)
-#0.71
-
-#1024,32  200 normally bins and such MBK
-#0.73
-
-#2048,16
-#0.46
-
-#1024,32  100 normally bins and such MBK
-#0.74
-
-
-
-#1024,32  300 normally bins and such MBK
-#
+    #BOWDeepLearning(train_x,train_y,test_x,test_y)

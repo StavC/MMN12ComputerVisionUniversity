@@ -1,9 +1,6 @@
 import numpy as np
-import cv2
 import matplotlib.pyplot as plt
 import seaborn as sns
-from scipy import stats
-import sklearn as sk
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.decomposition import PCA
 
@@ -20,9 +17,9 @@ def Question1(x_train,y_train,x_test,y_test):
     for k in range(1, 11):
         KNN = KNeighborsClassifier(n_neighbors=k, n_jobs=-1) #remove the param n_jobs if you dont want to overload your computer
         KNN.fit(x, y)
-        print(f"finished fiting :{k} ")
+        #print(f"finished fiting :{k} ") # its possible to uncomment these prints to see the progress of the algorithem
         scores.append(KNN.score(x_test, y_test))
-        print(f'finished predicting: {k}')
+        #print(f'finished predicting: {k}')
 
     plt.plot(scores, label='score')
     plt.xticks(np.arange(len(scores)), np.arange(1, len(scores) + 1))
@@ -36,9 +33,9 @@ def KNNHelper(x_train,y_train,x_test,y_test): # Helpfull function for Question 2
     for k in range(1,11):
         KNN = KNeighborsClassifier(n_neighbors=k, n_jobs=-1)
         KNN.fit(x_train, y_train)
-        print(f"finished fiting :{k} ")
+        #print(f"finished fiting :{k} ")
         scores.append(KNN.score(x_test, y_test))
-        print('finished predicting')
+        #print('finished predicting')
     return scores
 
 def Question2(x_train,y_train,x_test,y_test):
@@ -89,8 +86,8 @@ def Question2(x_train,y_train,x_test,y_test):
     #Starting 2.E
     pca = PCA(n_components=2)
     projected = pca.fit_transform(x_train)
-    print(x_train.shape)
-    print(projected.shape)
+    #print(x_train.shape)
+    #print(projected.shape)
 
     plt.scatter(projected[:, 0], projected[:, 1],
                 c=y_train, edgecolor='none', alpha=0.5,
@@ -168,8 +165,8 @@ def Question3(x_train,y_train,x_test,y_test):
 
     clf = LinearDiscriminantAnalysis(n_components=2)
     projected = clf.fit_transform(x_train,y_train)
-    print(x_train.shape)
-    print(projected.shape)
+    #print(x_train.shape)
+    #print(projected.shape)
 
     plt.scatter(projected[:, 0], projected[:, 1],
                 c=y_train, edgecolor='none', alpha=0.5,
@@ -194,7 +191,7 @@ def Question3(x_train,y_train,x_test,y_test):
         KNNScore = KNNHelper(x_train_ready, y_train, x_test_ready, y_test)
         plt.figure()
         plt.title(f'componenets {comp}')
-        plt.plot(range(1, 11), KNNScore, marker='x')
+        plt.plot(range(1, 8), KNNScore, marker='x')
 
     plt.show()
     # Finished 3.F

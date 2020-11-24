@@ -7,8 +7,10 @@ from sklearn import svm
 from sklearn import metrics
 import seaborn as sn
 import pandas as pd
-
-
+import scikitplot as skplt
+from tensorflow.keras.applications.vgg16 import preprocess_input
+from tensorflow.keras.applications.vgg16 import VGG16
+from tensorflow.keras.layers import Input
 
 
 def BOWSift(train_x,train_y,test_x,test_y):
@@ -19,11 +21,11 @@ def BOWSift(train_x,train_y,test_x,test_y):
     k=100 #feel free to change this hyperparmeter to test different sizes
     mbk=MiniBatchKMeans(k)
     bins=100 #feel free to change this hyperparmeter to test different sizes
-    c_array=[1,10,50,200,1000]
+    c_array=[1,10,50,200]
 
     sift = cv.xfeatures2d.SIFT_create()
 
-
+    # using SIFT
     for train_x_img in train_x:
         img=cv.imread(train_x_img)
         imgGray=cv.cvtColor(img,cv.COLOR_BGR2GRAY)
@@ -64,42 +66,39 @@ def BOWSift(train_x,train_y,test_x,test_y):
         predictions=linear_svm.predict(hist_test)
         predictionsProb=linear_svm.predict_proba(hist_test)
 
-        import scikitplot as skplt
         skplt.metrics.plot_roc(test_y, predictionsProb)
         plt.show()
 
         print(f" Class report for classifier {linear_svm},\n{metrics.classification_report(test_y,predictions)}")
         report=metrics.classification_report(test_y, predictions,output_dict=True)
         conf = metrics.confusion_matrix(test_y, predictions)
-        print(conf)
+        #print(conf)
 
 
         df_cm = pd.DataFrame(conf, ['coast', 'forest', 'highway', 'insidecity', 'mountain', 'opencountry', 'street',
                                     'tallbuilding'],
                              ['coast', 'forest', 'highway', 'insidecity', 'mountain', 'opencountry', 'street',
                               'tallbuilding'])
-        sn.heatmap(df_cm, annot=True, annot_kws={"size": 16})  # font size
+        sn.heatmap(df_cm, annot=True, annot_kws={"size": 16})
         plt.ylabel('True label')
         plt.xlabel('Predicted label')
         plt.show()
 
 
 
-from tensorflow.keras.applications.vgg16 import preprocess_input
-from tensorflow.keras.applications.vgg16 import VGG16
-from tensorflow.keras.layers import Input
+
 def BOWDeepLearning(train_x,train_y,test_x,test_y):
 
 
     input_tensor = Input(shape=(None, None, 3))
     model = VGG16(input_tensor=input_tensor, weights='imagenet', include_top=False)
     print(model.summary())
-
+    '''
     im = plt.imread(train_x[0])  # read an image file
     im = np.expand_dims(im, axis=0)
     im = preprocess_input(im)
     pred = model.predict(im)
-
+    '''
 
     # Starting Question 1
     POI = []
@@ -154,14 +153,12 @@ def BOWDeepLearning(train_x,train_y,test_x,test_y):
         predictions = linear_svm.predict(hist_test)
         predictionsProb = linear_svm.predict_proba(hist_test)
 
-        import scikitplot as skplt
         skplt.metrics.plot_roc(test_y, predictionsProb)
         plt.show()
 
         print(f" Class report for classifier {linear_svm},\n{metrics.classification_report(test_y, predictions)}")
-        report = metrics.classification_report(test_y, predictions, output_dict=True)
         conf = metrics.confusion_matrix(test_y, predictions)
-        print(conf)
+        #print(conf)
 
         df_cm = pd.DataFrame(conf, ['coast', 'forest', 'highway', 'insidecity', 'mountain', 'opencountry', 'street',
                                     'tallbuilding'],
@@ -211,9 +208,8 @@ if __name__ == '__main__':
     minPictures=(min(len(coast),len(forest),len(highway),len(insidecity),len(mountain),len(opencountry),len(street),len(tallbuilding)))
 
     print(f'the least amount of pictures from all of the categories is : {minPictures}')
-    ratios=0.8
+    ratios=0.8 # the ratio of Train\Test
     ratio=int(minPictures*ratios)  # im balancing the dataset so each class will have equal amount of pictures to avoid overfit!
-    #for i in range (ratio):
     for i in range (minPictures):
         if i< ratio:
                 train_x.append(coast[i])
@@ -255,7 +251,6 @@ if __name__ == '__main__':
     print(f'test_x and test_y sizes are:  {len(test_x)},{len(test_y)}') #making sure the math done right and we got 260*8*0.2=416 pictures in the testing set
     #now the Dataset is ready, we lost some data along the way but each class have equal amounts of pictures in training,testing set
     BOWSift(train_x,train_y,test_x,test_y)
-    #0.60% with 100 bins and mbk C=10
     BOWDeepLearning(train_x,train_y,test_x,test_y)
 
 
